@@ -7,7 +7,7 @@ import (
 	"github.com/tianhongw/grp/pkg/conn"
 )
 
-func ReadMsg(c conn.Conn) (Message, error) {
+func ReadMsg(c conn.IConn) (Message, error) {
 	var size int64
 	if err := binary.Read(c, binary.LittleEndian, &size); err != nil {
 		return nil, err
@@ -27,7 +27,7 @@ func ReadMsg(c conn.Conn) (Message, error) {
 	return buf, nil
 }
 
-func WriteMsg(c conn.Conn, msg Message) error {
+func WriteMsg(c conn.IConn, msg Message) error {
 	buf, err := Pack(msg)
 	if err != nil {
 		return err

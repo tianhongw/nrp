@@ -12,7 +12,7 @@ func init() {
 	TypeMap["TunnelRequest"] = toReflectType((*TunnelRequest)(nil))
 	TypeMap["TunnelResponse"] = toReflectType((*TunnelResponse)(nil))
 	TypeMap["ProxyRequest"] = toReflectType((*ProxyRequest)(nil))
-	TypeMap["ProxyResponse"] = toReflectType((*ProxyResponse)(nil))
+	TypeMap["ProxyReg"] = toReflectType((*ProxyReg)(nil))
 	TypeMap["ProxyStart"] = toReflectType((*ProxyStart)(nil))
 	TypeMap["Ping"] = toReflectType((*Ping)(nil))
 	TypeMap["Pong"] = toReflectType((*Pong)(nil))
@@ -64,8 +64,8 @@ type ProxyRequest struct {
 }
 
 // client to server
-type ProxyResponse struct {
-	ErrorMsg string
+type ProxyReg struct {
+	ClientId string
 }
 
 // server to client

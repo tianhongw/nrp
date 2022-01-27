@@ -1,0 +1,13 @@
+[server]
+http_addr = "127.0.0.1:12389"
+tunnel_addr = "127.0.0.1:12379"
+domain = "dev.com"
+conn_read_timeout_sec = 10
+conn_write_timeout_sec = 10
+
+[log]
+type = "std"
+level = "debug"
+format = "plain"
+outputs = ["stdout"]
+error_outputs = ["stderr"]

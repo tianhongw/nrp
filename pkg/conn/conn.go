@@ -111,31 +111,55 @@ func Listen(addr, typ string, tlsCfg *tls.Config) (*Listener, error) {
 	return l, nil
 }
 
-func Join(c1, c2 IConn) (fromBytes int64, toBytes int64) {
-	var wg sync.WaitGroup
-	wg.Add(2)
+func Join(c IConn, c2 IConn) (int64, int64) {
+	var wait sync.WaitGroup
 
-	go pipe(c1, c2, &wg, &fromBytes)
-	go pipe(c2, c1, &wg, &toBytes)
+	pipe := func(to IConn, from IConn, bytesCopied *int64) {
+		defer to.Close()
+		defer from.Close()
+		defer wait.Done()
 
-	wg.Wait()
-
-	return
-}
-
-func pipe(to, from IConn, wg *sync.WaitGroup, bytesCopied *int64) {
-	defer func() {
-		to.Close()
-		from.Close()
-		wg.Done()
-	}()
-
-	var err error
-	*bytesCopied, err = io.Copy(to, from)
-	if err != nil {
-		from.Errorf("copy bytes failed: %v", err)
+		var err error
+		*bytesCopied, err = io.Copy(to, from)
+		if err != nil {
+			from.Errorf("Copied %d bytes failing with error %v", *bytesCopied, err)
+		}
 	}
+
+	wait.Add(2)
+	var fromBytes, toBytes int64
+	go pipe(c, c2, &fromBytes)
+	go pipe(c2, c, &toBytes)
+	c.Info("Joined with connection %s", c2)
+	wait.Wait()
+	return fromBytes, toBytes
 }
+
+// func Join(c1, c2 IConn) (fromBytes int64, toBytes int64) {
+//	var wg sync.WaitGroup
+//	wg.Add(2)
+
+//	go pipe(c1, c2, &wg, &fromBytes)
+//	go pipe(c2, c1, &wg, &toBytes)
+
+//	wg.Wait()
+
+//	return
+// }
+
+// func pipe(to, from IConn, wg *sync.WaitGroup, bytesCopied *int64) {
+//	defer func() {
+//		to.Close()
+//		from.Close()
+//		wg.Done()
+//	}()
+
+//	var err error
+//	*bytesCopied, err = io.Copy(to, from)
+//	if err != nil {
+//		from.Errorf("copy bytes failed: %v", err)
+//	}
+// }
 
 const (
 	NotAuthorized = `HTTP/1.0 401 Not Authorized

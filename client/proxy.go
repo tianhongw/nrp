@@ -56,5 +56,14 @@ func (c *Client) proxy() {
 	}
 	defer locConn.Close()
 
+	if tunnel.Protocol == "http" ||
+		tunnel.Protocol == "https" {
+		httpWrapper := NewHttpWrapper()
+		wrappedConn := httpWrapper.wrapConn(locConn, nil)
+		_, _ = conn.Join(wrappedConn, remoteConn)
+	} else {
+		_, _ = conn.Join(locConn, remoteConn)
+	}
+
 	return
 }

@@ -56,6 +56,7 @@ func newControl(cfg *conf.Config, ctlConn conn.IConn,
 		auth:     authReq,
 		clientId: authReq.ClientId,
 		out:      make(chan message.Message),
+		conn:     ctlConn,
 		in:       make(chan message.Message),
 		proxies:  make(chan conn.IConn, defaultProxyMaxSize),
 		tunnels:  make([]*Tunnel, 0),
@@ -104,7 +105,7 @@ func (c *Control) registerTunnel(req *message.TunnelRequest) {
 
 		c.lg.Debugf("register tunnel: %v", newReq)
 
-		t, err := NewTunnel(&newReq, c, *c.cfg)
+		t, err := NewTunnel(&newReq, c, c.cfg)
 		if err != nil {
 			c.lg.Errorf("register tunnel failed: %v", err)
 			c.out <- &message.TunnelResponse{
@@ -125,12 +126,6 @@ func (c *Control) registerTunnel(req *message.TunnelRequest) {
 	}
 }
 
-func (c *Control) requestProxy() {
-	go func() {
-		c.out <- &message.ProxyRequest{}
-	}()
-}
-
 func (c *Control) registerProxy(conn conn.IConn) {
 	conn.SetDeadline(time.Now().Add(defaultProxyConnTimeout))
 	select {
@@ -149,7 +144,6 @@ func (c *Control) getProxy() (conn.IConn, error) {
 			return nil, errors.New("control is exiting")
 		}
 		return proxyConn, nil
-
 	default:
 		go func() {
 			c.out <- message.ProxyRequest{}

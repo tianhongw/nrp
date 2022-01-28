@@ -70,7 +70,7 @@ func (s *Server) Run() error {
 		gListeners["http"] = httpListener
 	}
 
-	if err := s.tunnelListener(s.cfg.Server.TunnelPort, nil); err != nil {
+	if err := s.tunnelListener(s.cfg.Server.ClientAddr, nil); err != nil {
 		s.Errorf("start tunnel listener failed: %v", err)
 		return err
 	}
@@ -109,10 +109,10 @@ func (s *Server) tunnelListener(addr string, tlsConfig *tls.Config) error {
 
 	for {
 		select {
-		case conn := <-listener.Conns:
-			go s.tunnelHandler(conn)
 		case <-s.exitChan:
 			return nil
+		case conn := <-listener.Conns:
+			go s.tunnelHandler(conn)
 		}
 	}
 }

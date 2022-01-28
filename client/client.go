@@ -18,17 +18,19 @@ import (
 type tunnel struct {
 	PublicUrl string
 	LocalAddr string
-	Protocol  proto.Protocol
+	Protocol  string
 }
 
 type Client struct {
-	log.Logger
-
+	// client id
 	id string
+
+	ctlConn conn.IConn
+
+	log.Logger
 
 	tunnels map[string]*tunnel
 
-	protoMap  map[string]proto.Protocol
 	protocols []proto.Protocol
 
 	cfg *conf.Config
@@ -43,18 +45,14 @@ type Client struct {
 
 	lastPing time.Time
 	lastPong atomic.Value
-
-	ctlConn conn.IConn
 }
 
 func NewClient(cfg *conf.Config) *Client {
-	protoMap := make(map[string]proto.Protocol)
-	protoMap["tcp"] = proto.NewTcp()
-
 	c := &Client{
 		cfg:      cfg,
 		exitChan: make(chan struct{}),
 		lastPing: time.Now(),
+		tunnels:  map[string]*tunnel{},
 	}
 
 	lg, _ := log.NewLogger(cfg.Log.Type,
@@ -132,12 +130,14 @@ func (c *Client) loop() error {
 	}
 
 	if authResp.ErrorMsg != "" {
+		c.Error(authResp.ErrorMsg)
 		return errors.New(authResp.ErrorMsg)
 	}
 
 	c.id = authResp.ClientId
 
-	c.Infof("client: %s successfully connect to server", c.id)
+	c.Infof("client: %s successfully connect to server, control conn established at: %v",
+		c.id, ctlConn.LocalAddr())
 
 	// request tunnels
 	reqIdToTunnelCfg := make(map[string]*conf.TunnelOption)
@@ -187,10 +187,11 @@ func (c *Client) loop() error {
 			t := &tunnel{
 				PublicUrl: m.URL,
 				LocalAddr: reqIdToTunnelCfg[m.RequestId].Protocols[m.Protocol],
-				Protocol:  c.protoMap[m.Protocol],
+				Protocol:  m.Protocol,
 			}
 			c.tunnels[t.PublicUrl] = t
-			c.Infof("tunnel established at: %v", t.PublicUrl)
+			c.Infof("tunnel established, public url: %s, local addr: %s",
+				t.PublicUrl, t.LocalAddr)
 		case *message.ProxyRequest:
 			c.waitGroup.Wrap(c.proxy)
 		}
@@ -242,6 +243,10 @@ func (c *Client) Exit() error {
 	close(c.exitChan)
 
 	c.waitGroup.Wait()
+
+	if err := c.ctlConn.Close(); err != nil {
+		c.Errorf("close control conn failed: %v", err)
+	}
 
 	c.Infof("client: %s exit success", c.id)
 

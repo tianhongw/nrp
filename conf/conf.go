@@ -24,7 +24,7 @@ type ServerOption struct {
 	HTTPSAddr string `mapstructure:"https_addr"`
 
 	// public port listening for nrp client
-	TunnelPort string `mapstructure:"tunnel_addr"`
+	ClientAddr string `mapstructure:"client_addr"`
 
 	// domain where the tunnels are hosted
 	Domain string `mapstructure:"domain"`
@@ -50,11 +50,12 @@ type ClientOption struct {
 }
 
 type TunnelOption struct {
-	HostName   string            `mapstructure:"host_name"`
-	SubDomain  string            `mapstructure:"sub_domain"`
-	Protocols  map[string]string `mapstructure:"protocols"`
-	HttpAuth   string            `mapstructure:"http_auth"`
-	RemotePort int               `mapstructure:"remote_port"`
+	HostName  string            `mapstructure:"host_name"`
+	SubDomain string            `mapstructure:"sub_domain"`
+	Protocols map[string]string `mapstructure:"protocols"`
+	HttpAuth  string            `mapstructure:"http_auth"`
+	// remote tcp port ask for
+	RemotePort int `mapstructure:"remote_port"`
 }
 
 type LogOption struct {

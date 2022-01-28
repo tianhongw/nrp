@@ -1,9 +1,22 @@
 [server]
 http_addr = "127.0.0.1:12389"
-tunnel_addr = "127.0.0.1:12379"
-domain = "dev.com"
+client_addr = "127.0.0.1:12379"
+domain = "nrp.me"
 conn_read_timeout_sec = 10
 conn_write_timeout_sec = 10
+
+[client]
+server_addr = "127.0.0.1:12379"
+[client.tunnels]
+[client.tunnels.t1]
+host_name = "nrptcp.com"
+remote_port = 3456
+[client.tunnels.t1.protocols]
+tcp = "127.0.0.1:13333"
+[client.tunnels.t2]
+sub_domain = "test"
+[client.tunnels.t2.protocols]
+http = "127.0.0.1:7777"
 
 [log]
 type = "zap"
@@ -11,12 +24,3 @@ level = "debug"
 format = "plain"
 outputs = ["stdout"]
 error_outputs = ["stderr"]
-
-[client]
-server_addr = "127.0.0.1:12389"
-[client.tunnels]
-[client.tunnels.tdev]
-host_name = "dev.com"
-remote_port = "12379"
-[client.tunnels.tdev.protocols]
-tcp = "127.0.0.1:13333"

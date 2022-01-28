@@ -39,7 +39,13 @@ build_all: build_server build_client
 
 build_server_osx:
 	# build for darwin amd64
-	GOOS=darwin GOARCH=amd64 go build -ldflags "$(LDFLAGS)" -gcflags "all=-N -l" -v -o $(BUILD_DIR)/$(NRPS_NAME)_darwin_amd64 cmd/nprs/main.go
+	GOOS=darwin GOARCH=amd64 go build -ldflags "$(LDFLAGS)" -gcflags "all=-N -l" -v -o $(BUILD_DIR)/$(NRPS_NAME) $(NRPS_DIR)/main.go
+
+build_client_osx:
+	# build for darwin amd64
+	GOOS=darwin GOARCH=amd64 go build -ldflags "$(LDFLAGS)" -gcflags "all=-N -l" -v -o $(BUILD_DIR)/$(NRPC_NAME) $(NRPC_DIR)/main.go
+
+build_osx_all: build_server_osx build_client_osx
 
 clean:
 	@go clean

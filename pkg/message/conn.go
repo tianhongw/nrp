@@ -33,6 +33,10 @@ func WriteMsg(c conn.IConn, msg Message) error {
 		return err
 	}
 
+	if err := binary.Write(c, binary.LittleEndian, int64(len(buf))); err != nil {
+		return err
+	}
+
 	_, err = c.Write(buf)
 
 	return err

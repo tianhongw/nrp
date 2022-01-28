@@ -24,7 +24,7 @@ func ReadMsg(c conn.IConn) (Message, error) {
 		return nil, fmt.Errorf("expected: %d bytes, but got: %d bytes", size, n)
 	}
 
-	return buf, nil
+	return Unpack(buf)
 }
 
 func WriteMsg(c conn.IConn, msg Message) error {

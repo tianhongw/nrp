@@ -6,8 +6,17 @@ conn_read_timeout_sec = 10
 conn_write_timeout_sec = 10
 
 [log]
-type = "std"
+type = "zap"
 level = "debug"
 format = "plain"
 outputs = ["stdout"]
 error_outputs = ["stderr"]
+
+[client]
+server_addr = "127.0.0.1:12389"
+[client.tunnels]
+[client.tunnels.tdev]
+host_name = "dev.com"
+remote_port = "12379"
+[client.tunnels.tdev.protocols]
+tcp = "127.0.0.1:13333"

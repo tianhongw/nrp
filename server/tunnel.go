@@ -75,7 +75,7 @@ func NewTunnel(req *message.TunnelRequest, ctl *Control, cfg conf.Config) (*Tunn
 		lg:    ctl.lg,
 	}
 
-	proto := tunnel.req.Protocal
+	proto := tunnel.req.Protocol
 
 	switch proto {
 	case "http", "https":

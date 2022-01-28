@@ -1,11 +1,15 @@
 package conn
 
 import (
+	"bufio"
 	"crypto/tls"
+	"encoding/base64"
 	"fmt"
 	"io"
 	stdlog "log"
 	"net"
+	"net/http"
+	"net/url"
 	"sync"
 
 	"github.com/tianhongw/grp/conf"
@@ -64,7 +68,7 @@ func WrapConn(conn net.Conn, typ string) *loggedConn {
 	case *net.TCPConn:
 		id := util.NewIntID()
 		lg, _ := log.NewLogger(cfg.Log.Type,
-			log.WithLevel(cfg.Log.Level), log.WithPrefix(fmt.Sprint(id)))
+			log.WithLevel(cfg.Log.Level), log.WithPrefix(fmt.Sprint(id, "-")))
 		wrapped := &loggedConn{
 			Conn:   c,
 			Logger: lg,
@@ -153,3 +157,73 @@ Content-Length: 12
 Bad Request
 `
 )
+
+func Dial(addr, typ string, tlsCfg *tls.Config) (*loggedConn, error) {
+	rawConn, err := net.Dial("tcp", addr)
+	if err != nil {
+		return nil, err
+	}
+
+	conn := WrapConn(rawConn, typ)
+	if tlsCfg != nil {
+		conn.StartTLS(tlsCfg)
+	}
+
+	return conn, nil
+}
+
+func DialHttpProxy(proxyUrl, addr, typ string, tlsCfg *tls.Config) (*loggedConn, error) {
+	u, err := url.Parse(proxyUrl)
+	if err != nil {
+		return nil, err
+	}
+
+	var proxyAuth string
+	if u.User != nil {
+		proxyAuth = "Basic " + base64.StdEncoding.EncodeToString([]byte(u.User.String()))
+	}
+
+	var proxyTlsCfg *tls.Config
+	switch u.Scheme {
+	case "http":
+		// do nothin
+	case "https":
+		proxyTlsCfg = &tls.Config{}
+	default:
+		return nil, fmt.Errorf("unsupported proxy url schema: %s", u.Scheme)
+	}
+
+	conn, err := Dial(addr, typ, proxyTlsCfg)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodConnect, "https://"+addr, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("User-Agent", "Mozilla/5.0 (compatible; nrp)")
+	if proxyAuth != "" {
+		req.Header.Set("Proxy-Authorization", proxyAuth)
+	}
+
+	if err = req.Write(conn); err != nil {
+		return nil, err
+	}
+
+	resp, err := http.ReadResponse(bufio.NewReader(conn), req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		return nil, fmt.Errorf("non 200 status code from proxy server: %d", resp.StatusCode)
+	}
+
+	if tlsCfg != nil {
+		conn.StartTLS(tlsCfg)
+	}
+
+	return conn, nil
+}

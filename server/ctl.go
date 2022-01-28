@@ -98,9 +98,9 @@ func newControl(cfg *conf.Config, ctlConn conn.IConn,
 }
 
 func (c *Control) registerTunnel(req *message.TunnelRequest) {
-	for _, proto := range strings.Split(req.Protocal, ",") {
+	for _, proto := range strings.Split(req.Protocol, ",") {
 		newReq := *req
-		newReq.Protocal = proto
+		newReq.Protocol = proto
 
 		c.lg.Debugf("register tunnel: %v", newReq)
 

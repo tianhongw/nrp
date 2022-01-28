@@ -1,6 +1,9 @@
 ROOT_DIR = $(CURDIR)
 BUILD_DIR = build
-CURR_NAME = nrp
+NRPS_DIR = cmd/nrps
+NRPC_DIR = cmd/nrpc
+NRPS_NAME = nrps
+NRPC_NAME = nrpc
 
 CURR_TIME := $(shell date +"%a %b %d %Y %H:%M:%S GMT%z")
 
@@ -24,18 +27,24 @@ endef
 
 .PHONY: build
 
-build:
+build_server:
 	# build for linux amd64
-	GOOS=linux GOARCH=amd64 go build -ldflags "$(LDFLAGS)" -gcflags "all=-N -l" -v -o $(BUILD_DIR)/$(CURR_NAME) main.go
+	GOOS=linux GOARCH=amd64 go build -ldflags "$(LDFLAGS)" -gcflags "all=-N -l" -v -o $(BUILD_DIR)/$(NRPS_NAME) $(NRPS_DIR)/main.go
 
-build_osx:
+build_client:
+	# build for linux amd64
+	GOOS=linux GOARCH=amd64 go build -ldflags "$(LDFLAGS)" -gcflags "all=-N -l" -v -o $(BUILD_DIR)/$(NRPC_NAME) $(NRPC_DIR)/main.go
+
+build_all: build_server build_client
+
+build_server_osx:
 	# build for darwin amd64
-	GOOS=darwin GOARCH=amd64 go build -ldflags "$(LDFLAGS)" -gcflags "all=-N -l" -v -o $(BUILD_DIR)/$(CURR_NAME)_darwin_amd64 main.go
+	GOOS=darwin GOARCH=amd64 go build -ldflags "$(LDFLAGS)" -gcflags "all=-N -l" -v -o $(BUILD_DIR)/$(NRPS_NAME)_darwin_amd64 cmd/nprs/main.go
 
 clean:
 	@go clean
 	@test -d $(BUILD_DIR) && rm -rf $(BUILD_DIR) || true
-	@test -f $(CURR_NAME).tar.gz && rm -f $(CURR_NAME).tar.gz || true
+	@test -f $(NRPS_NAME).tar.gz && rm -f $(NRPS_NAME).tar.gz || true
 
 check:
 	@go vet ./...

@@ -61,8 +61,8 @@ func (s *Server) Run() error {
 
 	gListeners = make(map[string]*conn.Listener)
 
-	if s.cfg.Server.HTTPPort != "" {
-		httpListener, err := startHttpListener(s.cfg.Server.HTTPPort, nil)
+	if s.cfg.Server.HTTPAddr != "" {
+		httpListener, err := startHttpListener(s.cfg.Server.HTTPAddr, nil)
 		if err != nil {
 			return err
 		}

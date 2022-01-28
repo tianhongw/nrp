@@ -40,7 +40,7 @@ type AuthResponse struct {
 // client to server
 type TunnelRequest struct {
 	RequestId string
-	Protocal  string
+	Protocol  string
 
 	// http only
 	HostName  string
@@ -48,7 +48,7 @@ type TunnelRequest struct {
 	HttpAuth  string
 
 	// tcp only
-	RemotePort uint16
+	RemotePort int
 }
 
 // server to client

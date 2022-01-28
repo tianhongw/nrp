@@ -1,32 +1,27 @@
 package conf
 
 import (
-	"sync"
-
 	"github.com/spf13/viper"
 )
 
 var gConfig *Config
-var mu sync.Mutex
 
 func GetConfig() *Config {
-	mu.Lock()
-	defer mu.Unlock()
-
 	return gConfig
 }
 
 type Config struct {
 	Server *ServerOption `mapstructure:"server"`
+	Client *ClientOption `mapstructure:"client"`
 	Log    *LogOption    `mapstructure:"log"`
 }
 
 type ServerOption struct {
-	// public port for HTTP connections
-	HTTPPort string `mapstructure:"http_addr"`
+	// public addr for HTTP connections
+	HTTPAddr string `mapstructure:"http_addr"`
 
-	// public port for HTTPS connections
-	HTTPSPort string `mapstructure:"https_addr"`
+	// public addr for HTTPS connections
+	HTTPSAddr string `mapstructure:"https_addr"`
 
 	// public port listening for nrp client
 	TunnelPort string `mapstructure:"tunnel_addr"`
@@ -45,6 +40,21 @@ type ServerOption struct {
 
 	// timeout in sec for connection read
 	ConnReadTimeoutSec int `mapstructure:"conn_read_timeout_sec"`
+}
+
+type ClientOption struct {
+	ServerAddr string                   `mapstructure:"server_addr"`
+	HTTPProxy  string                   `mapstructure:"http_proxy"`
+	AuthToken  string                   `mapstructure:"auth_token"`
+	Tunnels    map[string]*TunnelOption `mapstructure:"tunnels"`
+}
+
+type TunnelOption struct {
+	HostName   string            `mapstructure:"host_name"`
+	SubDomain  string            `mapstructure:"sub_domain"`
+	Protocols  map[string]string `mapstructure:"protocols"`
+	HttpAuth   string            `mapstructure:"http_auth"`
+	RemotePort int               `mapstructure:"remote_port"`
 }
 
 type LogOption struct {
